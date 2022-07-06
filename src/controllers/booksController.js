@@ -1,12 +1,41 @@
+//const { query } = require("express");
+const booksModel = require("../models/booksModel");
 const bookModel = require('../models/booksModel')
 const validator = require('validator')
     //const moment = require('moment')
 
-const nullValue = function(value) {
-    if (value == undefined || value == null) return true
-    if (typeof value !== 'string' || value.trim().length == 0) return true
-    return false
+    const nullValue = function(value) {
+        if (value == undefined || value == null) return true
+        if (typeof value !== 'string' || value.trim().length == 0) return true
+        return false
+    }
+
+
+const getBook = async function (req, res) {
+    try {
+        let query = req.query
+        if (Object.keys(req.query).length == 0) {
+            const allbookdata = await booksModel.find({ isDeleted: false })
+            if (!allbookdata) return res.status(404).send({ status: "false", massege: "No Book Found" })
+            return res.status(200).send({ Status: "true", Data: allbookdata })
+        }
+
+        else {
+            const bookdata = await booksModel.find({ isDeleted: false, $or: [query] })
+            if (!bookdata) return res.status(404).send({ status: "false", massege: "No Book Found" })
+            return res.status(200).send({ Status: "true", Data: bookdata })
+        }
+    }
+    catch (error) {
+        console.log("This is the error :", error.message)
+        return res.status(500).send({ msg: "Error", error: error.message })
+    }
 }
+
+
+//======================================================================================================================
+
+
 
 const createBook = async function(req, res) {
     const { title, excerpt, userId, ISBN, category, subcategory, reviews, isDeleted, releasedAt } = req.body
@@ -90,4 +119,6 @@ const createBook = async function(req, res) {
 
 }
 
+
+module.exports.getBook=getBook
 module.exports.createBook = createBook
