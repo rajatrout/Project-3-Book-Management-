@@ -41,7 +41,7 @@ const createBook = async function(req, res) {
     const { title, excerpt, userId, ISBN, category, subcategory, reviews, isDeleted, releasedAt } = req.body
 
     let final = {}
-    if (Object.kesys(req.body) === 0) {
+    if (Object.keys(req.body) === 0) {
         return res.status(400).send({ status: false, message: "Kindly enter all the required details(title, excerpt, userId, ISBN,category, subcategory, requiredAt. )" })
     }
 
@@ -75,7 +75,7 @@ const createBook = async function(req, res) {
         return res.status(400).send({ status: false, message: "Invalid ISBN or ISBN is not mentioned." })
     }
     if (!validator.isISBN(ISBN)) {
-        return res.status(400).send({ status: false, message: "Invalid userId" })
+        return res.status(400).send({ status: false, message: "Invalid ISBN" })
     }
     final.ISBN = ISBN
 
@@ -92,9 +92,9 @@ const createBook = async function(req, res) {
     final.subcategory = subcategory
 
 
-    if (typeof reviews !== Number) {
-        return res.status(400).send({ status: false, message: "Invalid reviews." })
-    }
+    // if (typeof reviews !== Number) {
+    //     return res.status(400).send({ status: false, message: "Invalid reviews." })
+    // }
     final.reviews = reviews
 
 
@@ -103,14 +103,14 @@ const createBook = async function(req, res) {
         final.deletedAt = Date.now()
     }
 
-
-    if (nullValue(releasedAt)) {
-        return res.status(400).send({ status: false, message: "Invalid release date or release date is not mentioned." })
-    }
-    if (!validator.isDate(releasedAt)) {
-        return res.status(400).send({ status: false, message: "Invalid Date. Give the date in correct format (YYYY-MM-DD ------- (Year - Month - Date))" })
-    }
-    final.releasedAt = releasedAt
+    //  releasedAt=Date.now()
+    // if (nullValue(releasedAt)) {
+    //     return res.status(400).send({ status: false, message: "Invalid release date or release date is not mentioned." })
+    // }
+    // if (!validator.isDate(releasedAt)) {
+    //     return res.status(400).send({ status: false, message: "Invalid Date. Give the date in correct format (YYYY-MM-DD ------- (Year - Month - Date))" })
+    // }
+    // final.releasedAt = releasedAt
 
 
     let saveData = await bookModel.create(final)

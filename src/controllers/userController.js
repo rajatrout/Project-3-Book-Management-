@@ -1,5 +1,6 @@
 const userModel = require("../models/userModel")
-const validateEmail = require("email-validator")
+var validator = require("email-validator");
+const jwt= require("jsonwebtoken")
 
 const isValid = function (value) {   //function to check entered data is valid or not
     if (typeof value == "undefined" || value == null) return false;
@@ -44,10 +45,10 @@ exports.createUser = async function (req, res) {
     }
 
 
-    if (!validateEmail.validate(email)) return res.status(400).send({ status: false, msg: "Enter a valid email" })
-    let uniqueEmail= await internModel.findOne({ email: internDetails.email });
+    if (!validator.validate(email)) return res.status(400).send({ status: false, msg: "Enter a valid email" })
+    let uniqueEmail= await userModel.findOne({ email: userDetails.email });
     if (uniqueEmail) return res.status(400).send({ status: false, msg: "email  already Used" })
-    let uniquePhone = await internModel.findOne({   phone: internDetails.phone});
+    let uniquePhone = await userModel.findOne({   phone: userDetails.phone});
     if (uniquePhone) return res.status(400).send({ status: false, msg: "Phone no  already Used" })
 
     if(!isValid(password)) return res.status(400).send({ status: false, msg: "password is required " })
@@ -64,8 +65,8 @@ if(validPass.test(password)) return res.status(400).send({ status: false, msg: "
     res.status(500).send({ msg: "Error", error: err.message })
 }
 }
-const userModel= require("../models/userModel")
-const jwt= require("jsonwebtoken")
+
+
 
 const loginUser = async function (req, res) {
     try{
