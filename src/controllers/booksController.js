@@ -91,26 +91,26 @@ const createBook = async function(req, res) {
     }
     final.subcategory = subcategory
 
-
-    // if (typeof reviews !== Number) {
-    //     return res.status(400).send({ status: false, message: "Invalid reviews." })
-    // }
+if(reviews) {
+    if (typeof(reviews )!== Number) {
+        return res.status(400).send({ status: false, message: "Invalid reviews." })
+    }
     final.reviews = reviews
-
+}
 
     if (isDeleted === true) {
         final.isDeleted = true
         final.deletedAt = Date.now()
     }
 
-    //  releasedAt=Date.now()
-    // if (nullValue(releasedAt)) {
-    //     return res.status(400).send({ status: false, message: "Invalid release date or release date is not mentioned." })
-    // }
-    // if (!validator.isDate(releasedAt)) {
-    //     return res.status(400).send({ status: false, message: "Invalid Date. Give the date in correct format (YYYY-MM-DD ------- (Year - Month - Date))" })
-    // }
-    // final.releasedAt = releasedAt
+    
+    if (nullValue(releasedAt)) {
+        return res.status(400).send({ status: false, message: "Invalid release date or release date is not mentioned." })
+    }
+    if (!validator.isDate(releasedAt)) {
+        return res.status(400).send({ status: false, message: "Invalid Date. Give the date in correct format (YYYY-MM-DD ------- (Year - Month - Date))" })
+    }
+    final.releasedAt = releasedAt
 
 
     let saveData = await bookModel.create(final)

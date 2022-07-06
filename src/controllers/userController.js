@@ -1,5 +1,5 @@
 const userModel = require("../models/userModel")
-var validator = require("email-validator");
+var validator = require("validator");
 const jwt= require("jsonwebtoken")
 
 const isValid = function (value) {   //function to check entered data is valid or not
@@ -7,7 +7,8 @@ const isValid = function (value) {   //function to check entered data is valid o
     if (typeof value == "string" && value.trim().length === 0) return false;
     return true;
 }
-let validName = /\d/;
+let validName = /^[a-zA-Z ]{3,30}$/
+
 let validPass=new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$")
 
 
@@ -25,11 +26,11 @@ exports.createUser = async function (req, res) {
     }
     const { title, name, phone, email, password} = userDetails
     if (!isValid(title)) {
-        res.status(400).send({ status: false, msg: "title is requred and enter title as [Mr,Mrs,Miss]" })
+         return res.status(400).send({ status: false, msg: "title is requred and enter title as [Mr,Mrs,Miss]" })
     }
 
-    if (!isValid(name) || validName.test(name)) {
-        res.status(400).send({ status: false, msg: "name is requred and enter name in correct format" })
+    if (!isValid(name) || !validName.test(name)) {
+       return res.status(400).send({ status: false, msg: "name is requred and enter name in correct format" })
     }
     if (!isValid(phone)) {
         res.status(400).send({ status: false, msg: " phone number is required" });
@@ -45,7 +46,7 @@ exports.createUser = async function (req, res) {
     }
 
 
-    if (!validator.validate(email)) return res.status(400).send({ status: false, msg: "Enter a valid email" })
+    if (!validator.isEmail(email)) return res.status(400).send({ status: false, msg: "Enter a valid email" })
     let uniqueEmail= await userModel.findOne({ email: userDetails.email });
     if (uniqueEmail) return res.status(400).send({ status: false, msg: "email  already Used" })
     let uniquePhone = await userModel.findOne({   phone: userDetails.phone});
