@@ -152,28 +152,30 @@ const updateBook = async function(req, res) {
         }
 
         let final = {}
-
-        if (valid(title)) {
-            return res.status(400).send({ status: false, message: "Title to update is not in valid format or not mentioned. " })
+        if (title) {
+            if (valid(title)) {
+                return res.status(400).send({ status: false, message: "Title to update is not in valid format or not mentioned. " })
+            }
+            let duplicateTitle = await bookModel.findOne({ title: title })
+            if (duplicateTitle) {
+                return res.status(400).send({ status: false, message: "The title already present, kindly update to some other title." })
+            }
+            final.title = title
         }
-        let duplicateTitle = await bookModel.findOne({ title: title })
-        if (duplicateTitle) {
-            return res.status(400).send({ status: false, message: "The title already present, kindly update to some other title." })
+
+        if (excerpt) {
+            if (valid(excerpt)) {
+                return res.status(400).send({ status: false, message: "Excerpt to update is not in valid format or not mentioned. " })
+            }
+            final.excerpt = excerpt
         }
-        final.title = title
-
-
-        if (valid(excerpt)) {
-            return res.status(400).send({ status: false, message: "Excerpt to update is not in valid format or not mentioned. " })
-        }
-        final.excerpt = excerpt
-
 
         if (releasedAt) {
-            return res.status(400).send({ status: false, message: "Release date to update is not in valid format or not mentioned. " })
+            if (valid(releasedAt)) {
+                return res.status(400).send({ status: false, message: "Release date to update is not in valid format or not mentioned. " })
+            }
+            final.releasedAt = releasedAt
         }
-        final.releasedAt = releasedAt
-
 
         if (ISBN) {
             if (valid(ISBN)) {
@@ -191,6 +193,7 @@ const updateBook = async function(req, res) {
         const saveData = await bookModel.findOneAndUpdate({ _id: bookId }, final, { new: true })
 
         return res.status(200).send({ status: true, message: "Sucessfully Updated", data: saveData })
+
     } catch (err) {
         return res.status(500).send({ status: false, message: err.message })
     }
