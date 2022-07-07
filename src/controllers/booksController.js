@@ -21,7 +21,7 @@ const createBook = async function(req, res) {
     if (isValid(title)) {
         return res.status(400).send({ status: false, message: "Invalid title or title is not mentioned. " })
     }
-    let duplicateTitle = await booksModel.findOne({ title: title })
+    const duplicateTitle = await booksModel.findOne({ title: title })
     if (duplicateTitle) {
         return res.status(400).send({ status: false, message: "The book is already created, try with some other book." })
     }
@@ -37,7 +37,7 @@ const createBook = async function(req, res) {
     if (isValid(userId)) {
         return res.status(400).send({ status: false, message: "Invalid userId or userId is not mentioned." })
     }
-    let validUserId = await userModel.findOne({ userId: userId })
+    const validUserId = await userModel.findOne({ userId: userId })
     if (!validUserId) {
         return res.status(400).send({ status: false, message: "Invalid userId, not available in database." })
     }
@@ -107,7 +107,7 @@ const createBook = async function(req, res) {
 
 const getBook = async function(req, res) {
     try {
-        let query = req.query
+        const query = req.query
         if (Object.keys(req.query).length == 0) {
             const allbookdata = await booksModel.find({ isDeleted: false })
             if (!allbookdata) return res.status(404).send({ status: "false", massege: "No Book Found" })
@@ -130,7 +130,7 @@ const getBook = async function(req, res) {
 
 const getBookById = async function(req, res) {
     try {
-        bookId = req.params.bookId
+        const bookId = req.params.bookId
         if (!bookId) return res.status(400).send({ Status: "false", msg: "Blog Id Is Needed" })
 
         if (!validator.isMongoId(bookId)) {
@@ -230,7 +230,40 @@ const updateBook = async function(req, res) {
     }
 }
 
+//======================================================================================================================
+
+const deletedBookById = async function(req, res) {
+    try {
+        const bookId = req.params.bookId;
+
+        if (!(bookId)) return res.status(400).send({ status: false, msg: "please enter book id" })
+        if (!validator.isMongoId(bookId)) return res.status(400).send({ status: false, msg: "book id is not valid" })
+        let book = await bookModel.findById(bookId);
+        if (!book) return res.status(404).send({ status: false, msg: "  book not found" })
+
+
+        if (book.isDeleted === true) return res.status(404).send({ status: false, msg: "book is already deleted" })
+
+
+        // blogData = req.body
+        let deletedBook = await bookModel.findOneAndUpdate({ _id: bookId }, {
+            $set: {
+                isDeleted: true,
+                deletedAt: Date()
+            }
+        }, { new: true });
+        res.status(200).send({ status: true, msg: "book is succesfully deleted" });
+
+
+
+    } catch (err) {
+        console.log("This is the error:", err.message)
+        res.status(500).send({ msg: "Error", error: err.message })
+    }
+
+}
 module.exports.createBook = createBook
 module.exports.getBook = getBook
 module.exports.getBookById = getBookById
 module.exports.updateBook = updateBook
+module.exports.deletedBookById = deletedBookById
