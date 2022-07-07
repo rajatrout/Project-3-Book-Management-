@@ -58,7 +58,7 @@ if(validPass.test(password)) return res.status(400).send({ status: false, msg: "
 
 
   let userData= await userModel.create(userDetails)
-  if (!userData) return res.status(404).send({ status: false, msg: " user not found" })
+  
     res.status(201).send({status:true,data:userData})
 
 } catch (err) {
