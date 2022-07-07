@@ -1,5 +1,5 @@
-const userModel = require("../models/userModel")
-var validator = require("validator");
+const usersModel = require("../models/usersModel")
+const validator = require("validator");
 const jwt = require("jsonwebtoken")
 
 const isValid = function(value) { //function to check entered data is valid or not
@@ -13,7 +13,7 @@ let validPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-
 
 
 
- const createUser = async function(req, res) {
+exports.createUser = async function(req, res) {
 
     try {
 
@@ -26,7 +26,10 @@ let validPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-
         const { title, name, phone, email, password } = userDetails
 
         if (!isValid(title)) {
-            return res.status(400).send({ status: false, msg: "title is requred and enter title as [Mr,Mrs,Miss]" })
+            return res.status(400).send({ status: false, msg: "title is required " })
+        }
+        if ((title != 'Mr') && (title != 'Mrs') && (title != 'Miss')) {
+            return res.status(400).send({ status: false, msg: "Please enter the correct title (Mr, Mrs, Miss)" })
         }
 
 
@@ -45,7 +48,7 @@ let validPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-
         }
 
 
-        let uniquePhone = await userModel.findOne({ phone: userDetails.phone });
+        let uniquePhone = await usersModel.findOne({ phone: userDetails.phone });
         if (uniquePhone) {
             return res.status(400).send({ status: false, msg: "Phone no. already Used" })
         }
@@ -58,7 +61,7 @@ let validPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-
         if (!validator.isEmail(email)) {
             return res.status(400).send({ status: false, msg: "Enter a valid email" })
         }
-        let uniqueEmail = await userModel.findOne({ email: userDetails.email });
+        let uniqueEmail = await usersModel.findOne({ email: userDetails.email });
         if (uniqueEmail) {
             return res.status(400).send({ status: false, msg: "email  already Used" })
         }
@@ -71,15 +74,18 @@ let validPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-
             return res.status(400).send({ status: false, msg: "password should be min 8 and max length 15" })
         }
 
-        let userData = await userModel.create(userDetails)
+        let userData = await usersModel.create(userDetails)
 
         res.status(201).send({ status: true, data: userData })
 
     } catch (err) {
         console.log("This is the error:", err.message)
         res.status(500).send({ msg: "Error", error: err.message })
-    }}
-    
+    }
+}
+
+
+
 const loginUser = async function(req, res) {
     try {
         let email = req.body.email;
@@ -93,7 +99,7 @@ const loginUser = async function(req, res) {
             message: "password Is Not Given"
         })
 
-        let User = await userModel.findOne({ email: email, password: password });
+        let User = await usersModel.findOne({ email: email, password: password });
         if (!User) return res.status(404).send({ status: false, msg: "Email-Id or the password is not Valid" });
 
         let token = jwt.sign({
@@ -114,4 +120,4 @@ const loginUser = async function(req, res) {
 };
 
 module.exports.loginUser = loginUser
-module.exports.createUser = createUser
+module.exports.createUser = loginUser
