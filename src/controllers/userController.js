@@ -1,4 +1,4 @@
-const usersModel = require("../models/usersModel")
+const usersModel = require("../models/userModel")
 const validator = require("validator");
 const jwt = require("jsonwebtoken")
 
@@ -8,79 +8,86 @@ const isValid = function(value) { //function to check entered data is valid or n
     return true;
 }
 let validName = /^[a-zA-Z ]{3,30}$/
+let validPass = /^[a-zA-Z0-9@*&]{8,15}$/
 
-let validPass = new RegExp("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$")
-
-
-
-exports.createUser = async function(req, res) {
+const createUser = async function(req, res) {
 
     try {
 
         let userDetails = req.body
 
         if (Object.keys(userDetails).length == 0) {
-            res.status(400).send({ status: false, message: "No user Detail Received" })
-            return
+            return res.status(400).send({ status: false, message: "No user Details Received" })
         }
-        const { title, name, phone, email, password } = userDetails
+        const { title, name, phone, email, password, address } = userDetails
+        const pincode = req.body.address.pincode
+
 
         if (!isValid(title)) {
-            return res.status(400).send({ status: false, msg: "title is required " })
+            return res.status(400).send({ status: false, message: "Title is required " })
         }
         if ((title != 'Mr') && (title != 'Mrs') && (title != 'Miss')) {
-            return res.status(400).send({ status: false, msg: "Please enter the correct title (Mr, Mrs, Miss)" })
+            return res.status(400).send({ status: false, message: "Please enter the correct title (Mr, Mrs, Miss)" })
         }
 
 
         if (!isValid(name) || !validName.test(name)) {
-            return res.status(400).send({ status: false, msg: "name is requred and enter name in correct format" })
+            return res.status(400).send({ status: false, message: "Name is requred and enter name in correct format" })
         }
 
 
         if (!isValid(phone)) {
-            res.status(400).send({ status: false, msg: " phone number is required" });
+            res.status(400).send({ status: false, message: "Phone number is required" });
             return
         }
-        if (!/^[6-9]\d{9}$/.test(phone)) {
+        if (!/^[6-9]{1}[0-9]{9}$/.test(phone)) {
             res.status(400).send({ status: false, message: "Please provide valid phone number" });
             return;
         }
-
-
         let uniquePhone = await usersModel.findOne({ phone: userDetails.phone });
         if (uniquePhone) {
-            return res.status(400).send({ status: false, msg: "Phone no. already Used" })
+            return res.status(400).send({ status: false, message: "Phone no. already Used" })
         }
 
 
         if (!isValid(email)) {
-            res.status(400).send({ status: false, msg: " email is required" });
-            return
+            return res.status(400).send({ status: false, message: "Email is required" });
+
         }
         if (!validator.isEmail(email)) {
-            return res.status(400).send({ status: false, msg: "Enter a valid email" })
+            return res.status(400).send({ status: false, message: "Enter a valid email" })
         }
         let uniqueEmail = await usersModel.findOne({ email: userDetails.email });
         if (uniqueEmail) {
-            return res.status(400).send({ status: false, msg: "email  already Used" })
+            return res.status(400).send({ status: false, message: "Email  already Used" })
         }
 
 
         if (!isValid(password)) {
-            return res.status(400).send({ status: false, msg: "password is required " })
+            return res.status(400).send({ status: false, message: "Password is required " })
         }
-        if (validPass.test(password)) {
-            return res.status(400).send({ status: false, msg: "password should be min 8 and max length 15" })
+        if (!validPass.test(password)) {
+            return res.status(400).send({ status: false, message: "Password should be min 8 and max length 15" })
         }
 
+        if (address) {
+            if (typeof address !== 'object') {
+                return res.status(400).send({ status: false, message: "Address is not in correct format" })
+            }
+
+            if (pincode) {
+                if (!/^[0-9]{6}$/.test(pincode)) {
+                    return res.status(400).send({ status: false, message: "Pin code needed in valid format." })
+                }
+            }
+        }
         let userData = await usersModel.create(userDetails)
 
-        res.status(201).send({ status: true, data: userData })
+        res.status(201).send({ status: true, message: "Success", data: userData })
 
     } catch (err) {
         console.log("This is the error:", err.message)
-        res.status(500).send({ msg: "Error", error: err.message })
+        res.status(500).send({ message: "Error", error: err.message })
     }
 }
 
@@ -96,16 +103,16 @@ const loginUser = async function(req, res) {
         let password = req.body.password;
         if (!password) return res.status(400).send({
             status: false,
-            message: "password Is Not Given"
+            message: "Password Is Not Given"
         })
 
         let User = await usersModel.findOne({ email: email, password: password });
-        if (!User) return res.status(404).send({ status: false, msg: "Email-Id or the password is not Valid" });
+        if (!User) return res.status(404).send({ status: false, message: "Email-Id or the password is not Valid" });
 
         let token = jwt.sign({
                 UserId: User._id.toString(),
-                batch: "Radon",
-                organisation: "FunctionUp",
+                iat: Date.now(),
+                exp: (Date.now()) + (60 * 1000) * 2
             },
             "functionup-project-3"
         );
@@ -114,10 +121,10 @@ const loginUser = async function(req, res) {
         return res.status(200).send({ status: true, message: "Successfull Log In", token: token });
 
     } catch (error) {
-        console.log("This is the error :", error.message)
-        return res.status(500).send({ msg: "Error", error: error.message })
+
+        return res.status(500).send({ message: "Error", error: error.message })
     }
 };
 
 module.exports.loginUser = loginUser
-module.exports.createUser = loginUser
+module.exports.createUser = createUser
