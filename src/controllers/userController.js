@@ -20,7 +20,6 @@ const createUser = async function(req, res) {
             return res.status(400).send({ status: false, message: "No user Details Received" })
         }
         const { title, name, phone, email, password, address } = userDetails
-        const pincode = req.body.address.pincode
 
 
         if (!isValid(title)) {
@@ -74,12 +73,6 @@ const createUser = async function(req, res) {
             if (typeof address !== 'object') {
                 return res.status(400).send({ status: false, message: "Address is not in correct format" })
             }
-
-            if (pincode) {
-                if (!/^[0-9]{6}$/.test(pincode)) {
-                    return res.status(400).send({ status: false, message: "Pin code needed in valid format." })
-                }
-            }
         }
         let userData = await usersModel.create(userDetails)
 
@@ -112,7 +105,7 @@ const loginUser = async function(req, res) {
         let token = jwt.sign({
                 UserId: User._id.toString(),
                 iat: Date.now(),
-                exp: (Date.now()) + (60 * 1000) * 2
+                exp: (Date.now()) + (60 * 1000) * 10
             },
             "functionup-project-3"
         );

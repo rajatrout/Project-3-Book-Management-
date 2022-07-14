@@ -15,15 +15,17 @@ let validsubcategory = /^[a-zA-Z ,]{3,150}$/
 //======================================================================================================================
 
 const createBook = async function(req, res) {
+
         try {
+            let final = {}
+            let data = req.swap
+            final.bookCover = data
+
             if (Object.keys(req.body).length === 0) {
                 return res.status(400).send({ status: false, message: "Kindly enter all the required details." })
             }
 
             const { title, excerpt, userId, ISBN, category, subcategory, reviews, isDeleted, releasedAt } = req.body
-
-            let final = {}
-
 
             if (!isValid(title)) {
                 return res.status(400).send({ status: false, message: "Invalid title or title is not mentioned. " })
@@ -84,14 +86,9 @@ const createBook = async function(req, res) {
                 return res.status(400).send({ status: false, message: "Invalid subcategory format" })
             }
             final.subcategory = subcategory.split(',')
+            console.log(final)
 
-
-            if (reviews) {
-                if (typeof(reviews) !== 'number') {
-                    return res.status(400).send({ status: false, message: "Invalid reviews." })
-                }
-                final.reviews = reviews
-            }
+            final.reviews = reviews
 
             if (isDeleted === true) {
                 final.isDeleted = true
@@ -120,7 +117,9 @@ const createBook = async function(req, res) {
 
 const getBook = async function(req, res) {
     try {
-        let query = req.query
+        const query = req.query
+        const subcategory = req.query.subcategory.split(',')
+        console.log(subcategory)
 
         if (Object.keys(req.query).length == 0) {
             const allBookData = await booksModel.find({ isDeleted: false }).sort({ title: 1 }).select({ title: 1, excerpt: 1, userId: 1, category: 1, releasedAt: 1, reviews: 1 })
@@ -132,7 +131,7 @@ const getBook = async function(req, res) {
 
         } else {
 
-            const bookData = await booksModel.find({ isDeleted: false, $or: [query] }).sort({ title: 1 }).select({ title: 1, excerpt: 1, userId: 1, category: 1, releasedAt: 1, reviews: 1 })
+            const bookData = await booksModel.find({ isDeleted: false, $or: [query, { subcategory: subcategory }] }).sort({ title: 1 }).select({ title: 1, excerpt: 1, userId: 1, category: 1, releasedAt: 1, reviews: 1 })
 
             if (bookData.length == 0) {
                 return res.status(404).send({ status: "false", massege: "No Book Found" })
@@ -200,7 +199,7 @@ const updateBook = async function(req, res) {
             let final = {}
 
             if (title) {
-                if (Object.keys(title) == 0 || !isValid(title)) {
+                if (Object.keys(title).length == 0 || !isValid(title)) {
                     return res.status(400).send({ status: false, message: "Title to update is not in valid format or not mentioned. " })
                 }
                 let duplicateTitle = await bookModel.findOne({ title: title })
